@@ -1,0 +1,7 @@
+{
+    "extends": "brinkbit/test",
+    "root": true,
+    "globals": {
+        "sinon": true,
+    },
+}

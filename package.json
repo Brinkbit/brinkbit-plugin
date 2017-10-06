@@ -1,0 +1,52 @@
+{
+  "name": "brinkbit-plugin",
+  "version": "0.1.0",
+  "description": "Plugin driver for brinkbit SDKs",
+  "main": "dist/brinkbit-plugin.js",
+  "scripts": {
+    "test": "cross-env NODE_ENV=test nyc --reporter=html --reporter=text mocha test/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Brinkbit/brinkbit-plugin.git"
+  },
+  "keywords": [
+    "Brinkbit",
+    "plugin",
+    "sdk",
+    "game",
+    "baas",
+    "backend"
+  ],
+  "author": "Brinkbit",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Brinkbit/brinkbit-plugin/issues"
+  },
+  "homepage": "https://github.com/Brinkbit/brinkbit-plugin#readme",
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "cross-env": "^5.0.5",
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb": "^15.0.1",
+    "eslint-config-brinkbit": "^0.1.10",
+    "eslint-plugin-babel": "^4.1.1",
+    "eslint-plugin-import": "^2.6.1",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-node": "^4.2.2",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-react": "^7.1.0",
+    "mocha": "^4.0.1",
+    "nyc": "^11.2.1"
+  },
+  "dependencies": {
+    "custom-error-instance": "^2.1.1",
+    "event-emitter": "^0.3.5",
+    "lodash.get": "^4.4.2",
+    "lodash.merge": "^4.6.0",
+    "lodash.pick": "^4.4.0",
+    "lodash.set": "^4.3.2",
+    "uuid": "^3.1.0",
+    "validate.js": "^0.11.1"
+  }
+}
