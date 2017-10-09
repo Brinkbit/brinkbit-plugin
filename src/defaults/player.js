@@ -5,7 +5,7 @@ const merge = require( 'lodash.merge' );
 const validate = require( '../validate' );
 const ValidationError = require( '../validate/validationError' );
 const normalizeArguments = require( '../validate/normalizeArguments' );
-const Plugin = require( '../' );
+const Plugin = require( '../plugin' );
 
 function initialize( brinkbit ) {
     class Player extends Plugin {

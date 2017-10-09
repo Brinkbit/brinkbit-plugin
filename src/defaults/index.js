@@ -4,8 +4,8 @@ const playerData = require( './playerData' );
 const player = require( './player' );
 
 module.exports = [
+    player,
     analytics,
     gameData,
     playerData,
-    player,
 ];
