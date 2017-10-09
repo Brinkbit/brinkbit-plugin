@@ -1,5 +1,5 @@
 const v4 = require( 'uuid/v4' );
-const Plugin = require( '../' );
+const Plugin = require( '../plugin' );
 
 function initializePlayerData( brinkbit, player ) {
     class PlayerData extends Plugin {
