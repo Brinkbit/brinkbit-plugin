@@ -120,6 +120,9 @@ class Plugin {
                 this.data,
                 this.readable( this.type === 'core' ? response.body : response.body.dataValue )
             );
+            if ( this.data._id ) {
+                this.id = this._id;
+            }
             this.emit( 'fetch', new BrinkbitEvent( 'fetch', response ));
             return response;
         });
