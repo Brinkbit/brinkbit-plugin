@@ -7,10 +7,10 @@ const set = require( 'lodash.set' );
 const eventEmitter = require( 'event-emitter' );
 
 const validate = require( './validate' );
-const ValidationError = require( './validate/validationError' );
 const normalizeArguments = require( './validate/normalizeArguments' );
 const normalizeResponse = require( './validate/normalizeResponse' );
 const BrinkbitEvent = require( './events' );
+const { ensurePromise, promisifyValidation } = require( './util' );
 
 class Plugin {
 
@@ -55,9 +55,9 @@ class Plugin {
             read,
             write,
             middleware = {},
-            player = brinkbit.Player.primary,
             pluginId,
         } = config;
+        const player = config.player || brinkbit.Player.primary;
         this.pluginId = pluginId;
         this.player = player;
         this.brinkbit = brinkbit;
@@ -108,13 +108,22 @@ class Plugin {
         return `./data/${this.pluginId}/keys/${key}`;
     }
 
+    getToken( options = {}) {
+        return options.token || this.token || ( this.type !== 'core' ? this.getPlayer().token : undefined );
+    }
+
     fetch( ...args ) {
         const options = normalizeArguments( ...args );
-        options.token = this.token;
-        options.uri = options.uri || this.getUrl( 'get' );
-        const opts = this.processMiddleware( 'fetch', options );
-        const promise = this.validate( 'get', opts )
-        .then(() => this.brinkbit._get( options ))
+        options.token = this.getToken( options );
+        const promise = ensurePromise( this.getUrl( 'get' ))
+        .then(( uri ) => {
+            options.uri = options.uri || uri;
+            return ensurePromise( this.processMiddleware( 'fetch', options ));
+        })
+        .then( opts =>
+            promisifyValidation( this.validate( 'get', opts ))
+            .then(() => this.brinkbit._get( opts )
+        ))
         .then(( response ) => {
             merge(
                 this.data,
@@ -134,34 +143,18 @@ class Plugin {
         if ( options.body ) {
             this.set( options.body );
         }
-        options.token = this.token || this.getPlayer().token;
+        options.token = this.getToken( options );
         options.method = options.method || ( this.id ? 'put' : 'post' );
         options.body = options.method === 'put' || options.method === 'post' ? this.writeable( this.data ) : undefined;
-        options.uri = options.uri || this.getUrl( options.method );
-        const opts = this.processMiddleware( 'save', options );
-        const validationResponse = this.validate( opts.method, opts.body );
-        const promise = (() => {
-            if ( typeof validationResponse === 'object' ) {
-                if ( typeof validationResponse.then === 'function' ) {
-                    return validationResponse;
-                }
-                else if (
-                    validationResponse instanceof ValidationError ||
-                    validationResponse instanceof Error ||
-                    validationResponse instanceof TypeError
-                ) {
-                    return Promise.reject( validationResponse );
-                }
-                const error = new ValidationError();
-                error.details = validationResponse;
-                return Promise.reject( error );
-            }
-            else if ( typeof validationResponse === 'string' ) {
-                return Promise.reject( validationResponse );
-            }
-            return Promise.resolve();
-        })()
-        .then(() => this.brinkbit._request( opts ))
+        const promise = ensurePromise( this.getUrl( options.method ))
+        .then(( uri ) => {
+            options.uri = options.uri || uri;
+            return ensurePromise( this.processMiddleware( 'save', options ));
+        })
+        .then( opts =>
+            promisifyValidation( this.validate( options.method, opts ))
+            .then(() => this.brinkbit._request( opts ))
+        )
         .then(( response ) => {
             merge(
                 this.data,
@@ -178,10 +171,16 @@ class Plugin {
 
     destroy( options = {}) {
         options.uri = this.getUrl( 'delete' );
-        options.token = this.token || this.getPlayer().token;
-        const opts = this.processMiddleware( 'destroy', options );
-        return this.validate( 'delete' )
-        .then(() => this.brinkbit._delete( opts ))
+        options.token = this.getToken( options );
+        return ensurePromise( this.getUrl( 'delete' ))
+        .then(( uri ) => {
+            options.uri = options.uri || uri;
+            return ensurePromise( this.processMiddleware( 'destroy', options ));
+        })
+        .then( opts =>
+            promisifyValidation( this.validate( 'delete', opts ))
+            .then(() => this.brinkbit._delete( opts ))
+        )
         .then(( response ) => {
             this.id = undefined;
             this.data.id = undefined;

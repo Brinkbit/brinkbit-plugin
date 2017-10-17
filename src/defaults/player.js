@@ -29,7 +29,13 @@ function initialize( brinkbit ) {
                     password: {
                         dataType: 'string',
                     },
+                    token: {
+                        dataType: 'string',
+                    },
                 });
+                if ( initialData.token ) {
+                    this.token = initialData.token;
+                }
             }
             this.middleware.save = this.saveMiddleware.bind( this );
             Player.plugins.forEach(( plugin ) => {
@@ -41,11 +47,9 @@ function initialize( brinkbit ) {
             const options = normalizeArguments( ...args );
             options.password = options.uri;
             options.uri = undefined;
-            return this.brinkbit.login( merge({}, this.data, options ))
-            .then(( user ) => {
-                this.token = user.token;
-                return this;
-            });
+            const opts = merge({}, this.data, options );
+            return this.brinkbit.login( opts, this )
+            .then(() => this );
         }
 
         logout() {
@@ -63,19 +67,31 @@ function initialize( brinkbit ) {
             return this.brinkbit.forgot( options || this.data );
         }
 
+        getUrl( method ) {
+            const key = this.id || this.data._id;
+            if ( method === 'get' && !this.id ) {
+                return './playerinfo/';
+            }
+            if ( method === 'post' ) {
+                return './players/';
+            }
+            return `./players/${key}/`;
+        }
+
         saveMiddleware( options ) {
             if ( !this.id ) {
                 options.passToken = false;
                 options.body.gameId = options.body.gameId || this.brinkbit.gameId;
             }
             else {
-                options.body.username = undefined;
-                options.body.password = undefined;
+                delete options.body.username;
+                delete options.body.password;
             }
             return options;
         }
 
-        validate( method, data ) {
+        validate( method, options ) {
+            const data = options.body;
             switch ( method ) {
                 case 'delete':
                     return Promise.reject( new Error( 'Cannot delete user' ));
@@ -107,11 +123,16 @@ function initialize( brinkbit ) {
                             dataType: 'string',
                             presence: false,
                         },
-                    });
+                    })
+                    .then(() => (
+                        typeof options.token === 'string' ?
+                            Promise.resolve() :
+                            Promise.reject( new ValidationError( 'User is not logged in' ))
+                    ));
                 default:
-                    return typeof this.id === 'string' ?
+                    return typeof options.token === 'string' ?
                         Promise.resolve() :
-                        Promise.reject( new ValidationError( 'Cannot fetch user without id' ));
+                        Promise.reject( new ValidationError( 'User is not logged in' ));
             }
         }
 
