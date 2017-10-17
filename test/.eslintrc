@@ -3,5 +3,6 @@
     "root": true,
     "globals": {
         "sinon": true,
+        "expect": true,
     },
 }
