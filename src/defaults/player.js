@@ -43,6 +43,10 @@ function initialize( brinkbit ) {
             });
         }
 
+        isLoggedIn() {
+            return !this.token;
+        }
+
         login( ...args ) {
             const options = normalizeArguments( ...args );
             options.password = options.uri;

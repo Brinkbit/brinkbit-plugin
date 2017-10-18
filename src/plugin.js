@@ -79,11 +79,11 @@ class Plugin {
 
     getPlayer() {
         if ( !this.player && !this.brinkbit.Player.primary ) {
-            throw new Error( 'No player logged in' );
+            return new Error( 'No player logged in' );
         }
         const player = this.player || this.brinkbit.Player.primary;
-        if ( !player.token || !player.id ) {
-            throw new Error( 'No player logged in' );
+        if ( !player.token && !player.id ) {
+            return new Error( 'No player logged in' );
         }
         return player;
     }
@@ -114,8 +114,11 @@ class Plugin {
 
     fetch( ...args ) {
         const options = normalizeArguments( ...args );
-        options.token = this.getToken( options );
-        const promise = ensurePromise( this.getUrl( 'get' ))
+        const promise = ensurePromise( this.getToken( options ))
+        .then(( token ) => {
+            options.token = token;
+            return ensurePromise( this.getUrl( 'get' ));
+        })
         .then(( uri ) => {
             options.uri = options.uri || uri;
             return ensurePromise( this.processMiddleware( 'fetch', options ));
@@ -143,10 +146,13 @@ class Plugin {
         if ( options.body ) {
             this.set( options.body );
         }
-        options.token = this.getToken( options );
         options.method = options.method || ( this.id ? 'put' : 'post' );
         options.body = options.method === 'put' || options.method === 'post' ? this.writeable( this.data ) : undefined;
-        const promise = ensurePromise( this.getUrl( options.method ))
+        const promise = ensurePromise( this.getToken( options ))
+        .then(( token ) => {
+            options.token = token;
+            return ensurePromise( this.getUrl( options.method ));
+        })
         .then(( uri ) => {
             options.uri = options.uri || uri;
             return ensurePromise( this.processMiddleware( 'save', options ));
@@ -170,9 +176,11 @@ class Plugin {
     }
 
     destroy( options = {}) {
-        options.uri = this.getUrl( 'delete' );
-        options.token = this.getToken( options );
-        return ensurePromise( this.getUrl( 'delete' ))
+        const promise = ensurePromise( this.getToken( options ))
+        .then(( token ) => {
+            options.token = token;
+            return ensurePromise( this.getUrl( 'delete' ));
+        })
         .then(( uri ) => {
             options.uri = options.uri || uri;
             return ensurePromise( this.processMiddleware( 'destroy', options ));
@@ -186,6 +194,7 @@ class Plugin {
             this.data.id = undefined;
             return response;
         });
+        return normalizeResponse( promise, options );
     }
 
     get( path ) {
