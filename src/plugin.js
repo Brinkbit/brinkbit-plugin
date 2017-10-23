@@ -201,7 +201,7 @@ class Plugin {
         if ( typeof path !== 'object' && typeof path !== 'string' ) {
             throw new Error( `${typeof path} is not a valid type for path` );
         }
-        return typeof attr === 'string' ? get( this.data, path ) : pick( this.data, path );
+        return typeof path === 'string' ? get( this.data, path ) : pick( this.data, path );
     }
 
     set( path, value ) {
