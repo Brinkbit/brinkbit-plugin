@@ -1,6 +1,6 @@
 {
   "name": "brinkbit-plugin",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Plugin driver for brinkbit SDKs",
   "main": "dist/brinkbit-plugin.js",
   "scripts": {
